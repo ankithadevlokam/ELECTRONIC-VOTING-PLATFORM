@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-
+import os
 from backend.models import db
 
 
@@ -9,6 +9,7 @@ def create_app():
     # Local prototype database
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///voting.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["VOTING_ENCRYPTION_KEY"] = os.environ.get("VOTING_ENCRYPTION_KEY")
 
     # Connect SQLAlchemy to Flask
     db.init_app(app)
