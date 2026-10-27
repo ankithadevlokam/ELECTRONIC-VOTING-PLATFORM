@@ -76,7 +76,7 @@ def test_duplicate_ballot_rejected(database):
 def test_invalid_preferences_rejected(database):
     credential = create_test_credential()
 
-    with pytest.raises(BallotSubmissionError):
+    with pytest.raises(ElectionValidationError):
         submit_ballot(credential, [1, 1, 2], mock_encrypt)
 
     assert Ballot.query.count() == 0
@@ -115,3 +115,37 @@ def test_database_failure_rolls_back_credential(database, monkeypatch):
 
     assert Ballot.query.count() == 0
     assert VotingCredential.query.first().is_used is False
+
+
+from backend.election import ElectionValidationError
+
+
+def test_unknown_election_cannot_submit_ballot(database):
+    credential = create_test_credential()
+
+    with pytest.raises(ElectionValidationError):
+        submit_ballot(
+            credential,
+            [1, 2, 3],
+            mock_encrypt,
+            election_id=999,
+        )
+
+    assert Ballot.query.count() == 0
+    assert VotingCredential.query.first().is_used is False
+
+
+def test_unknown_candidate_cannot_submit_ballot(database):
+    credential = create_test_credential()
+
+    with pytest.raises(ElectionValidationError):
+        submit_ballot(
+            credential,
+            [1, 2, 99],
+            mock_encrypt,
+            election_id=1,
+        )
+
+    assert Ballot.query.count() == 0
+    assert VotingCredential.query.first().is_used is False
+
