@@ -1,9 +1,13 @@
 
 from flask import Blueprint, jsonify, request
+from backend.election import get_election
 
 voting_api = Blueprint("voting_api", __name__)
 
-
+@voting_api.get("/api/elections/current")
+def current_election():
+    election = get_election(1)
+    return jsonify(election), 200
 @voting_api.post("/api/ballots")
 def submit_ballot_endpoint():
     if not request.is_json:
