@@ -43,3 +43,48 @@ def submit_ballot_endpoint():
     return jsonify({
         "error": "Ballot submission is not yet available"
     }), 503
+
+import hmac
+from flask import session
+
+from backend.issuance import (
+    issue_voting_credential,
+    CredentialIssuanceError,
+)
+
+
+@voting_api.post("/api/credentials/issue")
+def issue_credential_endpoint():
+    # Identity must come from the trusted authentication session.
+    voter_id = session.get("voter_id")
+
+    if type(voter_id) is not int or voter_id < 1:
+        return jsonify({
+            "error": "Authentication required"
+        }), 401
+
+    # CSRF token must have been created by the trusted login flow.
+    expected_token = session.get("csrf_token")
+    supplied_token = request.headers.get("X-CSRF-Token", "")
+
+    if (
+        not isinstance(expected_token, str)
+        or not expected_token
+        or not hmac.compare_digest(expected_token, supplied_token)
+    ):
+        return jsonify({
+            "error": "Request verification failed"
+        }), 403
+
+    try:
+        credential = issue_voting_credential(voter_id)
+
+    except CredentialIssuanceError:
+        return jsonify({
+            "error": "Credential issuance not permitted"
+        }), 403
+
+    return jsonify({
+        "status": "success",
+        "credential": credential
+    }), 201
