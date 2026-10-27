@@ -12,6 +12,8 @@ def create_app():
 
     # Connect SQLAlchemy to Flask
     db.init_app(app)
+    from backend.routes import voting_api
+    app.register_blueprint(voting_api)
 
     # Import models before creating database tables
     from backend.models import Voter, VotingCredential, Ballot
