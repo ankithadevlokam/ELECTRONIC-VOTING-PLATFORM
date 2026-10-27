@@ -19,6 +19,8 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+    from backend.routes import voting_bp
+    app.register_blueprint(voting_bp)
 
     @app.get("/api/health")
     def health_check():
